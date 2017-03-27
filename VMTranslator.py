@@ -1,11 +1,15 @@
+"""Contains the entry point for the VM translator"""
+
 import sys
 import Generator
 import Parser
 
 class VMTranslator:
+    """Translates virtual machine code to Hack assembly code"""
     input_file_suffix = ".vm"
 
     def translate(file_name):
+        """Translate a virtual machine code file into Hack assembly code"""
         parser = Parser.Parser()
         generator = Generator.Generator()
 

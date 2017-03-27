@@ -1,4 +1,7 @@
+"""Contains code for generating Hack assembly code"""
+
 class Generator:
+    """Generates assembly code based on virtual machine code"""
     # Memory segment names
     TEMP = "temp"
     STATIC = "static"
@@ -27,9 +30,9 @@ class Generator:
         'or',
         'add',
         'sub',
-		'eq',
-		'lt',
-		'gt'
+        'eq',
+        'lt',
+        'gt'
     ]
 
 	# Types of jump instructions
@@ -115,6 +118,7 @@ class Generator:
         self.write_instruction("A=M")
 
     def generate_push(self, memory_segment, offset):
+        """Generate code for a push operation"""
         if memory_segment == self.CONSTANT:
             self.write_instruction("@{0}".format(offset))
             self.write_instruction("D=A")
@@ -129,6 +133,7 @@ class Generator:
             self.shift_pointer(memory_segment, "-{0}".format(offset))
 
     def generate_pop(self, memory_segment, offset):
+        """Generate code for a pop operation"""
         self.shift_pointer("stack", -1)
         self.address_memory("stack")
         self.write_instruction("D=M")
@@ -139,7 +144,7 @@ class Generator:
             self.shift_pointer(memory_segment, "-{0}".format(offset))
 
     def generate_arithmetic(self, operation):
-        """Generate an arithmetic operation"""
+        """Generate code for an arithmetic operation"""
         # One operand operations
         if operation in self.unaryOperations:
             self.shift_pointer("stack", -1)
@@ -170,6 +175,7 @@ class Generator:
         self.shift_pointer("stack", 1)
 
     def generate_comparison(self, type_of_jump):
+        """Generate code for an comparison operation"""
         self.write_comment("Compare values")
         self.write_instruction("D=M-D")
         self.write_instruction("@{0}".format(self.instruction_count + 7))
@@ -184,6 +190,7 @@ class Generator:
         self.write_instruction("M=-1")
 
     def generate(self, lines_of_code, write_comments=False):
+        """Parse a list of code lines and call specialized functions to translate them"""
         self.write_comments = write_comments
         for line in lines_of_code:
             words = line.split(' ')
@@ -207,10 +214,12 @@ class Generator:
         return self.generated_code
 
     def generate_label(self, label):
+        """Generate a label"""
         self.write_comment("Generate label {0}".format(label))
         self.write_instruction("({0})".format(label))
 
     def generate_goto(self, goto_type, label):
+        """Generate code for a goto operation"""
         if goto_type == "if-goto":
             self.shift_pointer("stack", -1)
             self.address_memory("stack")
