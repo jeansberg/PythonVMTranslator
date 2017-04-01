@@ -3,7 +3,6 @@ import Generator
 import Parser
 
 class VMTranslator:
-    input_file_suffix = ".vm"
 
     def translate(file_name):
         parser = Parser.Parser()
@@ -20,7 +19,7 @@ class VMTranslator:
         output_file.close()
 
     if __name__ == '__main__':
-        if len(sys.argv) != 2 or not sys.argv[1].endswith(self.suffix):
+        if len(sys.argv) != 2 or not sys.argv[1].endswith(".vm"):
             quit("Usage: VMTranslator <fileName.vm>")
 
         translate(sys.argv[1])
