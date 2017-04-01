@@ -222,3 +222,137 @@ class Generator:
 		# if D != 0 or it is a plain goto, jump to the label
         self.write_instruction("@{0}".format(label))
         self.write_instruction("D;JMP")
+
+    def generate_function(self, name, number_of_arguments):
+        # Declare a label for the function entry
+        self.generate_label(name)
+        # Push local variables initialized to zero
+        for _ in range(0, int(number_of_arguments)):
+            self.generate_push("constant", 0)
+
+    def generate_call(self, name, number_of_arguments):
+        return_label = "Return_{0}".format(name)
+        self.write_comment("Push the return address")
+        self.write_instruction("@{0}".format(return_label))
+        self.write_instruction("D=A")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+        self.write_comment("Save LCL of the calling function")
+        self.write_instruction("@LCL")
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+        self.write_comment("Save ARG of the calling function")
+        self.write_instruction("@ARG")
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+        self.write_comment("Save THIS of the calling function")
+        self.write_instruction("@THIS")
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+        self.write_comment("Save THAT of the calling function")
+        self.write_instruction("@THAT")
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+        self.write_comment("Reposition ARG")
+        self.address_direct("SP")
+        self.write_instruction("D=M")
+        for _ in range(0, int(number_of_arguments) + 5):
+            self.write_instruction("D=D-1")
+        self.address_direct("ARG")
+        self.write_instruction("M=D")
+        self.write_comment("Reposition LCL")
+        self.address_direct("SP")
+        self.write_instruction("D=M")
+        self.address_direct("LCL")
+        self.write_instruction("M=D")
+        self.write_comment("Transfer control")
+        self.generate_goto("goto", name)
+        self.write_comment("Declare a label for the return address")
+        self.generate_label(return_label)
+
+    def generate_return(self):
+        # FRAME = LCL (FRAME is a temporary variable stored in R13)
+        self.address_memory("local")
+        self.write_instruction("D=A")
+        self.write_instruction("@R13")
+        self.write_instruction("M=D")
+
+        # retaddr = *(frame-5) (stored in R14)
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        for _ in range(0, 5):
+            self.write_instruction("D=D-1")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.write_instruction("@R14")
+        self.write_instruction("M=D")
+
+        # *ARG = pop
+        self.generate_pop("argument", 0)
+
+        # SP = ARG + 1
+        self.address_memory("argument")
+        self.write_instruction("D=A")
+        self.write_instruction("D=D+1")
+        self.address_direct("SP")
+        self.write_instruction("M=D")
+
+        # THAT = *(frame-1)
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("D=D-1")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct("THAT")
+        self.write_instruction("M=D")
+
+        # THIS = *(frame-2)
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct("THIS")
+        self.write_instruction("M=D")
+
+        # ARG = *(frame-3)
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct("ARG")
+        self.write_instruction("M=D")
+
+        # LCL = *(frame-4)
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+        self.write_instruction("D=D-1")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct("LCL")
+        self.write_instruction("M=D")
+
+        self.write_instruction("@R14")
+        self.write_instruction("A=M")
+        self.write_instruction("D;JMP")
