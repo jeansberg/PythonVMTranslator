@@ -185,25 +185,29 @@ class Generator:
 
     def generate(self, lines_of_code, write_comments=False):
         self.write_comments = write_comments
-        for line in lines_of_code:
-            words = line.split(' ')
-            self.write_comment("***{0}***".format(line))
-            if words[0] == "push":
                 self.generate_push(words[1], words[2])
-            elif words[0] == "pop":
                 self.generate_pop(words[1], words[2])
-            elif words[0] in self.unaryOperations + self.binaryOperations:
-                self.generate_arithmetic(words[0])
-            elif words[0] == "label":
                 self.generate_label(words[1])
             elif "goto" in words[0]:
                 self.generate_goto(words[0], words[1])
-            elif words[0] == "function":
-                self.generate_function(words[1], words[2])
-            elif words[0] == "return":
-                self.generate_return()
-            elif words[0] == "call":
                 self.generate_call(words[1], words[2])
+
+
+        for file in vm_files:
+            for line in vm_files[file]:
+                words = line.split(' ')
+                self.write_comment("***{0}***".format(line))
+                if words[0] == "push":
+                elif words[0] == "pop":
+                elif words[0] in self.unaryOperations + self.binaryOperations:
+                    self.generate_arithmetic(words[0])
+                elif words[0] == "label":
+                elif words[0] == "function":
+                    self.generate_function(words[1], words[2])
+                elif words[0] == "return":
+                    self.generate_return()
+                elif words[0] == "call":
+
         return self.generated_code
 
     def generate_label(self, label):

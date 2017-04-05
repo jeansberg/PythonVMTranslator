@@ -1,25 +1,42 @@
+import os
+from os.path import *
 import sys
 import Generator
 import Parser
 
-class VMTranslator:
+def get_file_content(filename):
+    file = open(filename, "r")
+    contents = Parser.parse(file.readlines())
+    file.close()
+    return (splitext(split(filename)[1])[0], contents)
 
-    def translate(file_name):
-        parser = Parser.Parser()
-        generator = Generator.Generator()
+def translate(target):
 
-        input_file = open(file_name, "r")
-        vmcode_lines = parser.parse(input_file.readlines())
-        input_file.close()
-        assemblycode_string = generator.generate(vmcode_lines)
+    filenames = []
+    output_path = splitext(target)[0] + ".asm"
 
-        output_name = file_name.replace(".vm", ".asm")
-        output_file = open(output_name, "w")
-        output_file.write(assemblycode_string)
-        output_file.close()
+    if isdir(target):
+        filenames = filter(lambda entry: isfile(entry) and splitext(entry)[1] == ".vm",
+                            [join(target, entry) for entry in os.listdir(target)])
+        output_path = join(target, output_path)
+    elif isfile(target):
+        filenames.append(target)
 
-    if __name__ == '__main__':
-        if len(sys.argv) != 2 or not sys.argv[1].endswith(".vm"):
-            quit("Usage: VMTranslator <fileName.vm>")
+    generator = Generator.Generator()
 
-        translate(sys.argv[1])
+    vm_files = dict(map(get_file_content, filenames))
+        
+    assemblycode_string = generator.generate(vm_files)
+
+    output_file = open(output_path, "w")
+    output_file.write(assemblycode_string)
+    output_file.close()
+
+if __name__ == '__main__':
+    if len(sys.argv) !=2:
+        quit("Usage: VMTranslator <fileName.vm> or VMTranslator <directoryName>")
+        
+    target = sys.argv[1]
+
+    if exists(target):
+        translate(target)
