@@ -191,14 +191,14 @@ class Generator:
                 words = line.split(' ')
                 self.write_comment("***{0}***".format(line))
                 if words[0] == "push":
-		    self.generate_push(words[1], words[2])
+					self.generate_push(words[1], words[2])
                 elif words[0] == "pop":
-		    self.generate_pop(words[1], words[2])
+					self.generate_pop(words[1], words[2])
                 elif words[0] in self.unaryOperations + self.binaryOperations:
                     self.generate_arithmetic(words[0])
                 elif words[0] == "label":
-		    self.generate_label(words[1])
-		elif "goto" in words[0]:
+					self.generate_label(words[1])
+				elif "goto" in words[0]:
                     self.generate_goto(words[0], words[1])
                 elif words[0] == "function":
                     self.generate_function(words[1], words[2])
