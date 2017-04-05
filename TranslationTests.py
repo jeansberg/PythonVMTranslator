@@ -48,6 +48,14 @@ class VMTranslatorTests(unittest.TestCase):
     def test_FibonacciSeries_isTranslatedCorrectly(self):
         self.file_name = "FibonacciSeries.vm"
         self.translator.translate(self.test_directory + self.file_name)
+        
+    def test_SimpleFunction_isTranslatedCorrectly(self):
+        self.file_name = "SimpleFunction.vm"
+        self.translator.translate(self.test_directory + self.file_name)
+
+    def test_NestedCall_isTranslatedCorrectly(self):
+        self.file_name = "Sys.vm"
+        self.translator.translate(self.test_directory + self.file_name)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(VMTranslatorTests)
 unittest.TextTestRunner(verbosity=2).run(suite)
