@@ -4,45 +4,45 @@ class Generator:
     STATIC = "static"
     CONSTANT = "constant"
 
-	# Maps VM language memory segment names to assembly symbols
+    # Maps VM language memory segment names to assembly symbols
     memory_segments = {'stack': 'SP',
                        'local': 'LCL',
                        'argument': 'ARG',
                        'this': 'THIS',
                        'that': 'THAT'}
 
-	# Memory locations of the temp and static blocks
+    # Memory locations of the temp and static blocks
     memory_locations = {'temp': 5,
                         'static': 16}
 
-	# Arithmetic operations on one operand
+    # Arithmetic operations on one operand
     unaryOperations = [
         'not',
         'neg',
     ]
 
-	# Arithmetic operations on two operands
+    # Arithmetic operations on two operands
     binaryOperations = [
         'and',
         'or',
         'add',
         'sub',
-		'eq',
-		'lt',
-		'gt'
+        'eq',
+        'lt',
+        'gt'
     ]
 
-	# Types of jump instructions
+    # Types of jump instructions
     jump_instructions = {
         'JEQ',
         'JGT',
         'JLT'
     }
 
-	# Holds the generated code string
+    # Holds the generated code string
     generated_code = ""
 
-	# Keeps track of the number of generated instructions
+    # Keeps track of the number of generated instructions
     instruction_count = 0
 
     # Disables or enables comments in the generated code
@@ -174,36 +174,39 @@ class Generator:
         self.write_instruction("D=M-D")
         self.write_instruction("@{0}".format(self.instruction_count + 7))
         self.write_instruction("D;{0}".format(type_of_jump))
-		# Result is false (-1)
+        # Result is false (-1)
         self.address_memory("stack")
         self.write_instruction("M=0")
         self.write_instruction("@{0}".format(self.instruction_count + 5))
         self.write_instruction("D;JMP")
-		# Result is true (-1)
+        # Result is true (-1)
         self.address_memory("stack")
         self.write_instruction("M=-1")
 
-    def generate(self, lines_of_code, write_comments=False):
+    def generate(self, vm_files, write_comments=False):
         self.write_comments = write_comments
-        for line in lines_of_code:
-            words = line.split(' ')
-            self.write_comment("***{0}***".format(line))
-            if words[0] == "push":
-                self.generate_push(words[1], words[2])
-            elif words[0] == "pop":
-                self.generate_pop(words[1], words[2])
-            elif words[0] in self.unaryOperations + self.binaryOperations:
-                self.generate_arithmetic(words[0])
-            elif words[0] == "label":
-                self.generate_label(words[1])
-            elif "goto" in words[0]:
-                self.generate_goto(words[0], words[1])
-            elif words[0] == "function":
-                self.generate_function(words[1], words[2])
-            elif words[0] == "return":
-                self.generate_return()
-            elif words[0] == "call":
-                self.generate_call(words[1], words[2])
+
+        for file in vm_files:
+            for line in vm_files[file]:
+                words = line.split(' ')
+                self.write_comment("***{0}***".format(line))
+                if words[0] == "push":
+                    self.generate_push(words[1], words[2])
+                elif words[0] == "pop":
+                    self.generate_pop(words[1], words[2])
+                elif words[0] in self.unaryOperations + self.binaryOperations:
+                    self.generate_arithmetic(words[0])
+                elif words[0] == "label":
+                    self.generate_label(words[1])
+                elif "goto" in words[0]:
+                    self.generate_goto(words[0], words[1])
+                elif words[0] == "function":
+                    self.generate_function(words[1], words[2])
+                elif words[0] == "return":
+                    self.generate_return()
+                elif words[0] == "call":
+                    self.generate_call(words[1], words[2])
+
         return self.generated_code
 
     def generate_label(self, label):
@@ -219,7 +222,7 @@ class Generator:
             self.write_instruction("@{0}".format(self.instruction_count + 3))
             self.write_instruction("D;JEQ")
 
-		# if D != 0 or it is a plain goto, jump to the label
+        # if D != 0 or it is a plain goto, jump to the label
         self.write_instruction("@{0}".format(label))
         self.write_instruction("D;JMP")
 
