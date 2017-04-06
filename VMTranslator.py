@@ -13,14 +13,15 @@ def get_file_content(filename):
 def translate(target):
 
     filenames = []
-    output_path = splitext(target)[0] + ".asm"
+    output_path = []
 
     if isdir(target):
         filenames = filter(lambda entry: isfile(entry) and splitext(entry)[1] == ".vm",
                             [join(target, entry) for entry in os.listdir(target)])
-        output_path = join(target, output_path)
+        output_path = join(target, split(target)[1]) + ".asm"
     elif isfile(target):
         filenames.append(target)
+        output_path = splitext(target)[0] + ".asm"
 
     generator = Generator.Generator()
 

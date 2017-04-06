@@ -9,9 +9,12 @@ class VMTranslatorTests(unittest.TestCase):
 
     def tearDown(self):
         self.compare_output()
-        os.remove(self.test_directory + self.target_name.replace(".vm", ".asm"))
+        os.remove(self.test_directory + os.path.splitext(self.target_name)[0] + ".asm")
 
     def compare_output(self):
+        if os.path.splitext(self.target_name)[1] == "":
+            self.target_name = os.path.join(self.target_name, os.path.split(self.target_name)[1])
+
         output_file = open(self.test_directory + os.path.splitext(self.target_name)[0] + ".asm")
         output_data = output_file.read()
 
