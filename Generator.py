@@ -4,45 +4,45 @@ class Generator:
     STATIC = "static"
     CONSTANT = "constant"
 
-    # Maps VM language memory segment names to assembly symbols
+	# Maps VM language memory segment names to assembly symbols
     memory_segments = {'stack': 'SP',
                        'local': 'LCL',
                        'argument': 'ARG',
                        'this': 'THIS',
                        'that': 'THAT'}
 
-    # Memory locations of the temp and static blocks
+	# Memory locations of the temp and static blocks
     memory_locations = {'temp': 5,
                         'static': 16}
 
-    # Arithmetic operations on one operand
+	# Arithmetic operations on one operand
     unaryOperations = [
         'not',
         'neg',
     ]
 
-    # Arithmetic operations on two operands
+	# Arithmetic operations on two operands
     binaryOperations = [
         'and',
         'or',
         'add',
         'sub',
-        'eq',
-        'lt',
-        'gt'
+		'eq',
+		'lt',
+		'gt'
     ]
 
-    # Types of jump instructions
+	# Types of jump instructions
     jump_instructions = {
         'JEQ',
         'JGT',
         'JLT'
     }
 
-    # Holds the generated code string
+	# Holds the generated code string
     generated_code = ""
 
-    # Keeps track of the number of generated instructions
+	# Keeps track of the number of generated instructions
     instruction_count = 0
 
     # Disables or enables comments in the generated code
