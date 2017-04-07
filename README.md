@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/jeansberg/PythonVMTranslator.svg?branch=master)](https://travis-ci.org/jeansberg/PythonVMTranslator)
 # PythonVMTranslator
 This is a virtual machine translator for the VM language defined in *From NAND to Tetris Building a Modern Computer From First Principles* (http://nand2tetris.org/)
 
