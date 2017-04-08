@@ -60,4 +60,5 @@ class VMTranslatorTests(unittest.TestCase):
         VMTranslator.translate(self.test_directory + self.target_name)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(VMTranslatorTests)
-unittest.TextTestRunner(verbosity=2).run(suite)
+result = unittest.TextTestRunner(verbosity=2).run(suite)
+sys.exit(not result.wasSuccessful())
