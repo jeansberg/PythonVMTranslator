@@ -197,11 +197,11 @@ class Generator:
                 elif words[0] in self.unaryOperations + self.binaryOperations:
                     self.generate_arithmetic(words[0])
                 elif words[0] == "label":
-                    self.generate_label("{0}".format(words[1]))
+                    self.generate_label(words[1])
                 elif words[0] == "goto":
                     self.generate_goto("@{0}".format(words[1]))
                 elif words[0] == "if-goto":
-                    self.generate_if("@{0}${1}".format(self.current_function, words[1]))
+                    self.generate_if("@{0}".format(words[1]))
                 elif words[0] == "function":
                     self.generate_function(words[1], words[2])
                 elif words[0] == "return":
