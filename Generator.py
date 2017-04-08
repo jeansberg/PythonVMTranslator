@@ -183,7 +183,7 @@ class Generator:
         self.address_memory("stack")
         self.write_instruction("M=-1")
 
-    def generate(self, vm_files, write_comments=False):
+    def generate(self, vm_files, write_comments):
         self.write_comments = write_comments
 
         for file in vm_files:

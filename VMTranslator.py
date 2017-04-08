@@ -10,7 +10,7 @@ def get_file_content(filename):
     file.close()
     return (splitext(split(filename)[1])[0], contents)
 
-def translate(target):
+def translate(target, write_comments = False):
 
     filenames = []
     output_path = []
@@ -27,7 +27,7 @@ def translate(target):
 
     vm_files = dict(map(get_file_content, filenames))
         
-    assemblycode_string = generator.generate(vm_files)
+    assemblycode_string = generator.generate(vm_files, write_comments)
 
     output_file = open(output_path, "w")
     output_file.write(assemblycode_string)
@@ -40,4 +40,4 @@ if __name__ == '__main__':
     target = sys.argv[1]
 
     if exists(target):
-        translate(target)
+        translate(target, True)
