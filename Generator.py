@@ -199,9 +199,9 @@ class Generator:
                 elif words[0] == "label":
                     self.generate_label(words[1])
                 elif words[0] == "goto":
-                    self.generate_goto("@{0}".format(words[1]))
+                    self.generate_goto(words[1])
                 elif words[0] == "if-goto":
-                    self.generate_if("@{0}".format(words[1]))
+                    self.generate_if(words[1])
                 elif words[0] == "function":
                     self.generate_function(words[1], words[2])
                 elif words[0] == "return":
