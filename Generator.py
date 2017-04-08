@@ -280,7 +280,7 @@ class Generator:
         self.save_pointer("THIS")
         self.save_pointer("THAT")
 
-        self.reposition_pointer("ARG", number_of_arguments + 5)
+        self.reposition_pointer("ARG", int(number_of_arguments) + 5)
         self.reposition_pointer("LCL")
 
         self.write_comment("Transfer control")
