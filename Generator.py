@@ -226,6 +226,35 @@ class Generator:
         self.write_instruction("@{0}".format(label))
         self.write_instruction("D;JMP")
 
+    def save_pointer(self, pointer):
+        self.write_comment("Save {0} of the calling function".format(pointer))
+        self.write_instruction("@{0}".format(pointer))
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+
+    def reposition_pointer(self, pointer, offset=None):
+        self.address_direct("SP")
+        self.write_instruction("D=M")
+        if offset == None:
+            self.address_direct(pointer)
+            self.write_instruction("M=D")
+        else:
+            self.write_instruction("@{0}".format(offset))
+            self.write_instruction("D=D-A")
+
+    def restore_pointer(self, pointer, offset):
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("@{0}".format(offset))
+        self.write_instruction("D=D-A")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct(pointer)
+        self.write_instruction("M=D")
+
     def generate_function(self, name, number_of_arguments):
         # Declare a label for the function entry
         self.generate_label(name)
@@ -234,51 +263,30 @@ class Generator:
             self.generate_push("constant", 0)
 
     def generate_call(self, name, number_of_arguments):
-        return_label = "Return_{0}".format(name)
+        if name in self.function_calls:
+            self.function_calls[name] += 1
+        else:
+            self.function_calls[name] = 1
+        
+        return_label = name + str(self.function_calls[name])
         self.write_comment("Push the return address")
         self.write_instruction("@{0}".format(return_label))
         self.write_instruction("D=A")
         self.address_memory("stack")
         self.write_instruction("M=D")
         self.shift_pointer("stack", 1)
-        self.write_comment("Save LCL of the calling function")
-        self.write_instruction("@LCL")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save ARG of the calling function")
-        self.write_instruction("@ARG")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save THIS of the calling function")
-        self.write_instruction("@THIS")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save THAT of the calling function")
-        self.write_instruction("@THAT")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Reposition ARG")
-        self.address_direct("SP")
-        self.write_instruction("D=M")
-        for _ in range(0, int(number_of_arguments) + 5):
-            self.write_instruction("D=D-1")
-        self.address_direct("ARG")
-        self.write_instruction("M=D")
-        self.write_comment("Reposition LCL")
-        self.address_direct("SP")
-        self.write_instruction("D=M")
-        self.address_direct("LCL")
-        self.write_instruction("M=D")
+
+        self.save_pointer("LCL")
+        self.save_pointer("ARG")
+        self.save_pointer("THIS")
+        self.save_pointer("THAT")
+
+        self.reposition_pointer("ARG", number_of_arguments)
+        self.reposition_pointer("LCL")
+
         self.write_comment("Transfer control")
-        self.generate_goto("goto", name)
+        self.generate_goto(name)
+
         self.write_comment("Declare a label for the return address")
         self.generate_label(return_label)
 
@@ -292,11 +300,8 @@ class Generator:
         # retaddr = *(frame-5) (stored in R14)
         self.write_instruction("@R13")
         self.write_instruction("D=M")
-        for _ in range(0, 5):
-            self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
+        self.write_instruction("@{0}".format(5))
+        self.write_instruction("D=D-A")
         self.write_instruction("@R14")
         self.write_instruction("M=D")
 
@@ -310,52 +315,12 @@ class Generator:
         self.address_direct("SP")
         self.write_instruction("M=D")
 
-        # THAT = *(frame-1)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
+        self.restore_pointer("THAT", 1)
+        self.restore_pointer("THIS", 2)
+        self.restore_pointer("ARG", 3)
+        self.restore_pointer("LCL", 4)
 
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("THAT")
-        self.write_instruction("M=D")
-
-        # THIS = *(frame-2)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("THIS")
-        self.write_instruction("M=D")
-
-        # ARG = *(frame-3)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("ARG")
-        self.write_instruction("M=D")
-
-        # LCL = *(frame-4)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("LCL")
-        self.write_instruction("M=D")
-
+        # Jump to the return address
         self.write_instruction("@R14")
         self.write_instruction("A=M")
         self.write_instruction("D;JMP")
