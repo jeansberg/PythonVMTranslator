@@ -266,12 +266,7 @@ class Generator:
             self.generate_push("constant", 0)
 
     def generate_call(self, name, number_of_arguments):
-        if name in self.function_calls:
-            self.function_calls[name] += 1
-        else:
-            self.function_calls[name] = 1
-        
-        return_label = name + str(self.function_calls[name])
+        return_label = "Return_{0}".format(name)
         self.write_comment("Push the return address")
         self.write_instruction("@{0}".format(return_label))
         self.write_instruction("D=A")
