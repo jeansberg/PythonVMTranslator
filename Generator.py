@@ -242,10 +242,11 @@ class Generator:
         self.write_instruction("D=M")
         if offset == None:
             self.address_direct(pointer)
-            self.write_instruction("M=D")
         else:
             self.write_instruction("@{0}".format(offset))
             self.write_instruction("D=D-A")
+            self.write_instruction("@{0}".format(pointer))
+        self.write_instruction("M=D")
 
     def restore_pointer(self, pointer, offset):
         self.write_instruction("@R13")
@@ -279,7 +280,7 @@ class Generator:
         self.save_pointer("THIS")
         self.save_pointer("THAT")
 
-        self.reposition_pointer("ARG", number_of_arguments)
+        self.reposition_pointer("ARG", number_of_arguments + 5)
         self.reposition_pointer("LCL")
 
         self.write_comment("Transfer control")
@@ -300,6 +301,8 @@ class Generator:
         self.write_instruction("D=M")
         self.write_instruction("@{0}".format(5))
         self.write_instruction("D=D-A")
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
         self.write_instruction("@R14")
         self.write_instruction("M=D")
 
