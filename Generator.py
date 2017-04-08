@@ -198,8 +198,10 @@ class Generator:
                     self.generate_arithmetic(words[0])
                 elif words[0] == "label":
                     self.generate_label(words[1])
-                elif "goto" in words[0]:
-                    self.generate_goto(words[0], words[1])
+                elif words[0] == "goto":
+                    self.generate_goto("@{0}${1}".format(self.current_function, words[1]))
+                elif words[0] == "if-goto":
+                    self.generate_if("@{0}${1}".format(self.current_function, words[1]))
                 elif words[0] == "function":
                     self.generate_function(words[1], words[2])
                 elif words[0] == "return":
@@ -213,18 +215,19 @@ class Generator:
         self.write_comment("Generate label {0}".format(label))
         self.write_instruction("({0})".format(label))
 
-    def generate_goto(self, goto_type, label):
-        if goto_type == "if-goto":
-            self.shift_pointer("stack", -1)
-            self.address_memory("stack")
-            self.write_instruction("D=M")
-            # if D = 0 skip the goto by jumping over it
-            self.write_instruction("@{0}".format(self.instruction_count + 3))
-            self.write_instruction("D;JEQ")
-
-        # if D != 0 or it is a plain goto, jump to the label
+    def generate_goto(self, label):
+        self.write_comment("Goto {0}".format(label))
         self.write_instruction("@{0}".format(label))
         self.write_instruction("D;JMP")
+
+    def generate_if(self, label):
+        self.write_comment("If-goto {0}".format(label))
+        self.shift_pointer("stack", -1)
+        self.address_memory("stack")
+        self.write_instruction("D=M")
+        # if D != 0 jump to the label
+        self.write_instruction("@{0}".format(label))
+        self.write_instruction("D;JNE")
 
     def save_pointer(self, pointer):
         self.write_comment("Save {0} of the calling function".format(pointer))
