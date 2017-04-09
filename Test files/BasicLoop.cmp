@@ -15,7 +15,7 @@ D=M
 @LCL
 A=M
 M=D
-(LOOP_START)
+($LOOP_START)
 @ARG
 A=M
 D=M
@@ -106,7 +106,7 @@ A=M
 @SP
 A=M
 D=M
-@LOOP_START
+@$LOOP_START
 D;JNE
 @LCL
 A=M
