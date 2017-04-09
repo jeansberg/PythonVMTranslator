@@ -4,45 +4,45 @@ class Generator:
     STATIC = "static"
     CONSTANT = "constant"
 
-    # Maps VM language memory segment names to assembly symbols
+	# Maps VM language memory segment names to assembly symbols
     memory_segments = {'stack': 'SP',
                        'local': 'LCL',
                        'argument': 'ARG',
                        'this': 'THIS',
                        'that': 'THAT'}
 
-    # Memory locations of the temp and static blocks
+	# Memory locations of the temp and static blocks
     memory_locations = {'temp': 5,
                         'static': 16}
 
-    # Arithmetic operations on one operand
+	# Arithmetic operations on one operand
     unaryOperations = [
         'not',
         'neg',
     ]
 
-    # Arithmetic operations on two operands
+	# Arithmetic operations on two operands
     binaryOperations = [
         'and',
         'or',
         'add',
         'sub',
-        'eq',
-        'lt',
-        'gt'
+		'eq',
+		'lt',
+		'gt'
     ]
 
-    # Types of jump instructions
+	# Types of jump instructions
     jump_instructions = {
         'JEQ',
         'JGT',
         'JLT'
     }
 
-    # Holds the generated code string
+	# Holds the generated code string
     generated_code = ""
 
-    # Keeps track of the number of generated instructions
+	# Keeps track of the number of generated instructions
     instruction_count = 0
 
     # Disables or enables comments in the generated code
@@ -183,7 +183,7 @@ class Generator:
         self.address_memory("stack")
         self.write_instruction("M=-1")
 
-    def generate(self, vm_files, write_comments=False):
+    def generate(self, vm_files, write_comments):
         self.write_comments = write_comments
 
         for file in vm_files:
@@ -198,8 +198,10 @@ class Generator:
                     self.generate_arithmetic(words[0])
                 elif words[0] == "label":
                     self.generate_label(words[1])
-                elif "goto" in words[0]:
-                    self.generate_goto(words[0], words[1])
+                elif words[0] == "goto":
+                    self.generate_goto(words[1])
+                elif words[0] == "if-goto":
+                    self.generate_if(words[1])
                 elif words[0] == "function":
                     self.generate_function(words[1], words[2])
                 elif words[0] == "return":
@@ -213,18 +215,49 @@ class Generator:
         self.write_comment("Generate label {0}".format(label))
         self.write_instruction("({0})".format(label))
 
-    def generate_goto(self, goto_type, label):
-        if goto_type == "if-goto":
-            self.shift_pointer("stack", -1)
-            self.address_memory("stack")
-            self.write_instruction("D=M")
-            # if D = 0 skip the goto by jumping over it
-            self.write_instruction("@{0}".format(self.instruction_count + 3))
-            self.write_instruction("D;JEQ")
-
-        # if D != 0 or it is a plain goto, jump to the label
+    def generate_goto(self, label):
+        self.write_comment("Goto {0}".format(label))
         self.write_instruction("@{0}".format(label))
         self.write_instruction("D;JMP")
+
+    def generate_if(self, label):
+        self.write_comment("If-goto {0}".format(label))
+        self.shift_pointer("stack", -1)
+        self.address_memory("stack")
+        self.write_instruction("D=M")
+        # if D != 0 jump to the label
+        self.write_instruction("@{0}".format(label))
+        self.write_instruction("D;JNE")
+
+    def save_pointer(self, pointer):
+        self.write_comment("Save {0} of the calling function".format(pointer))
+        self.write_instruction("@{0}".format(pointer))
+        self.write_instruction("D=M")
+        self.address_memory("stack")
+        self.write_instruction("M=D")
+        self.shift_pointer("stack", 1)
+
+    def reposition_pointer(self, pointer, offset=None):
+        self.address_direct("SP")
+        self.write_instruction("D=M")
+        if offset == None:
+            self.address_direct(pointer)
+        else:
+            self.write_instruction("@{0}".format(offset))
+            self.write_instruction("D=D-A")
+            self.write_instruction("@{0}".format(pointer))
+        self.write_instruction("M=D")
+
+    def restore_pointer(self, pointer, offset):
+        self.write_instruction("@R13")
+        self.write_instruction("D=M")
+        self.write_instruction("@{0}".format(offset))
+        self.write_instruction("D=D-A")
+
+        self.write_instruction("A=D")
+        self.write_instruction("D=M")
+        self.address_direct(pointer)
+        self.write_instruction("M=D")
 
     def generate_function(self, name, number_of_arguments):
         # Declare a label for the function entry
@@ -241,44 +274,18 @@ class Generator:
         self.address_memory("stack")
         self.write_instruction("M=D")
         self.shift_pointer("stack", 1)
-        self.write_comment("Save LCL of the calling function")
-        self.write_instruction("@LCL")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save ARG of the calling function")
-        self.write_instruction("@ARG")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save THIS of the calling function")
-        self.write_instruction("@THIS")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Save THAT of the calling function")
-        self.write_instruction("@THAT")
-        self.write_instruction("D=M")
-        self.address_memory("stack")
-        self.write_instruction("M=D")
-        self.shift_pointer("stack", 1)
-        self.write_comment("Reposition ARG")
-        self.address_direct("SP")
-        self.write_instruction("D=M")
-        for _ in range(0, int(number_of_arguments) + 5):
-            self.write_instruction("D=D-1")
-        self.address_direct("ARG")
-        self.write_instruction("M=D")
-        self.write_comment("Reposition LCL")
-        self.address_direct("SP")
-        self.write_instruction("D=M")
-        self.address_direct("LCL")
-        self.write_instruction("M=D")
+
+        self.save_pointer("LCL")
+        self.save_pointer("ARG")
+        self.save_pointer("THIS")
+        self.save_pointer("THAT")
+
+        self.reposition_pointer("ARG", int(number_of_arguments) + 5)
+        self.reposition_pointer("LCL")
+
         self.write_comment("Transfer control")
-        self.generate_goto("goto", name)
+        self.generate_goto(name)
+
         self.write_comment("Declare a label for the return address")
         self.generate_label(return_label)
 
@@ -292,9 +299,8 @@ class Generator:
         # retaddr = *(frame-5) (stored in R14)
         self.write_instruction("@R13")
         self.write_instruction("D=M")
-        for _ in range(0, 5):
-            self.write_instruction("D=D-1")
-
+        self.write_instruction("@{0}".format(5))
+        self.write_instruction("D=D-A")
         self.write_instruction("A=D")
         self.write_instruction("D=M")
         self.write_instruction("@R14")
@@ -310,52 +316,12 @@ class Generator:
         self.address_direct("SP")
         self.write_instruction("M=D")
 
-        # THAT = *(frame-1)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
+        self.restore_pointer("THAT", 1)
+        self.restore_pointer("THIS", 2)
+        self.restore_pointer("ARG", 3)
+        self.restore_pointer("LCL", 4)
 
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("THAT")
-        self.write_instruction("M=D")
-
-        # THIS = *(frame-2)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("THIS")
-        self.write_instruction("M=D")
-
-        # ARG = *(frame-3)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("ARG")
-        self.write_instruction("M=D")
-
-        # LCL = *(frame-4)
-        self.write_instruction("@R13")
-        self.write_instruction("D=M")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-        self.write_instruction("D=D-1")
-
-        self.write_instruction("A=D")
-        self.write_instruction("D=M")
-        self.address_direct("LCL")
-        self.write_instruction("M=D")
-
+        # Jump to the return address
         self.write_instruction("@R14")
         self.write_instruction("A=M")
         self.write_instruction("D;JMP")

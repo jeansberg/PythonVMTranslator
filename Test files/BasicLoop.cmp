@@ -106,10 +106,8 @@ A=M
 @SP
 A=M
 D=M
-@111
-D;JEQ
 @LOOP_START
-D;JMP
+D;JNE
 @LCL
 A=M
 D=M
