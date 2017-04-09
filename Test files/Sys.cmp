@@ -60,8 +60,8 @@ A=M
 D=M
 @6
 M=D
-(LOOP)
-@LOOP
+(Sys.init$LOOP)
+@Sys.init$LOOP
 D;JMP
 (Sys.main)
 @123
