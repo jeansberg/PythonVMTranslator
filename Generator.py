@@ -186,6 +186,9 @@ class Generator:
     def generate(self, vm_files, write_comments):
         self.write_comments = write_comments
 
+        if len(vm_files) > 1:
+            self.generate_bootstrap_code()
+
         for file in vm_files:
             for line in vm_files[file]:
                 words = line.split(' ')
@@ -210,6 +213,13 @@ class Generator:
                     self.generate_call(words[1], words[2])
 
         return self.generated_code
+
+    def generate_bootstrap_code(self):
+        self.write_instruction("@256")
+        self.write_instruction("D=A")
+        self.address_direct("SP")
+        self.write_instruction("M=D")
+        self.generate_call("Sys.init", 0)
 
     def generate_label(self, label):
         self.write_comment("Generate label {0}".format(label))
